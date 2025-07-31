@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Вход</title>
-  <link rel="stylesheet" href="../styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — Muvvy</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>Вход</h1>
-    <form id="login-form">
-      <input type="text" placeholder="Имя пользователя" required /><br><br>
-      <input type="password" placeholder="Пароль" required /><br><br>
-      <button type="submit" class="btn">Войти</button>
+    <form class="form-card" method="POST" action="#">
+      <h1>Вход</h1>
+
+      <label for="email">Электронная почта</label>
+      <input type="email" id="email" name="email" required>
+
+      <label for="password">Пароль</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Войти</button>
+
+      <p class="link-text">Нет аккаунта? <a href="../register/">Зарегистрироваться</a></p>
     </form>
-    <br>
-    <a href="../index.html" class="btn">Назад</a>
   </div>
 </body>
 </html>
