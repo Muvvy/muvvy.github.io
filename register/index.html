@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Регистрация</title>
-  <link rel="stylesheet" href="../styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация — Muvvy</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>Регистрация</h1>
-    <form id="register-form">
-      <input type="text" placeholder="Имя пользователя" required /><br><br>
-      <input type="password" placeholder="Пароль" required /><br><br>
-      <button type="submit" class="btn">Зарегистрироваться</button>
+    <form class="form-card" method="POST" action="#">
+      <h1>Регистрация</h1>
+
+      <label for="username">Имя пользователя</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="email">Электронная почта</label>
+      <input type="email" id="email" name="email" required>
+
+      <label for="password">Пароль</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Создать аккаунт</button>
+
+      <p class="link-text">Уже есть аккаунт? <a href="../login/">Войти</a></p>
     </form>
-    <br>
-    <a href="../index.html" class="btn">Назад</a>
   </div>
 </body>
 </html>
