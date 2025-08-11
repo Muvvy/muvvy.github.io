@@ -1,109 +1,74 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>GPT Чат</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f1f1f1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        #chat-container {
-            width: 400px;
-            background: #fff;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-        #chat {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            padding-right: 5px;
-        }
-        .msg {
-            padding: 8px;
-            border-radius: 8px;
-            margin-bottom: 5px;
-        }
-        .user {
-            background: #d1e7dd;
-            align-self: flex-end;
-        }
-        .bot {
-            background: #f8d7da;
-            align-self: flex-start;
-        }
-        #input-container {
-            display: flex;
-        }
-        input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-        }
-        button {
-            margin-left: 5px;
-            padding: 8px 12px;
-            border: none;
-            background: #0d6efd;
-            color: #fff;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0b5ed7;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ИИ Web App для Telegram</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 10px; background: #f8f8f8; }
+    #chat { height: 350px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; background: #fff; }
+    .msg { margin: 5px 0; }
+    .user { color: #1976d2; }
+    .bot { color: #388e3c; }
+    #inputArea { margin-top: 10px; }
+    button { background: #1976d2; color: #fff; border: none; padding: 6px 18px; border-radius: 4px; cursor: pointer; }
+    button:disabled { opacity: 0.6; }
+    input { padding: 6px; width: 70%; }
+  </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat"></div>
-        <div id="input-container">
-            <input id="message" type="text" placeholder="Введите сообщение...">
-            <button onclick="sendMessage()">Отправить</button>
-        </div>
-    </div>
 
-    <script>
-        const API_URL = "https://твоё-приложение.onrender.com/chat"; // Замени на свой Render URL
+<h2>ИИ Telegram Web App</h2>
+<div id="chat"></div>
 
-        async function sendMessage() {
-            const input = document.getElementById("message");
-            const msg = input.value.trim();
-            if (!msg) return;
+<div id="inputArea">
+  <input type="text" id="input" placeholder="Напиши сообщение..." autocomplete="off" />
+  <button id="sendBtn">Отправить</button>
+</div>
 
-            appendMessage("Ты", msg, "user");
-            input.value = "";
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
 
-            try {
-                const res = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: msg })
-                });
-                const data = await res.json();
-                appendMessage("Бот", data.response, "bot");
-            } catch (err) {
-                appendMessage("Ошибка", "Не удалось отправить запрос.", "bot");
-            }
-        }
+  Telegram.WebApp.ready();
 
-        function appendMessage(sender, text, type) {
-            const chat = document.getElementById("chat");
-            const msgElem = document.createElement("div");
-            msgElem.classList.add("msg", type);
-            msgElem.innerHTML = `<b>${sender}:</b> ${text}`;
-            chat.appendChild(msgElem);
-            chat.scrollTop = chat.scrollHeight;
-        }
-    </script>
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage("Ты: " + text, "user");
+    input.value = '';
+    sendBtn.disabled = true;
+
+    try {
+      // ЗАМЕНИ URL на адрес своего backend-API!
+      const response = await fetch('https://your-backend-domain.com/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await response.json();
+      addMessage("Бот: " + data.answer, "bot");
+    } catch (err) {
+      addMessage("Ошибка при получении ответа от ИИ.", "bot");
+    }
+    sendBtn.disabled = false;
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keypress', e => {
+    if (e.key === 'Enter') sendMessage();
+  });
+</script>
+
 </body>
 </html>
