@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GPT Web App</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600&display=swap"
-      rel="stylesheet"
-    />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #1b1b1b;
@@ -53,20 +50,6 @@
             font-size: 1.5rem;
             margin: 0;
         }
-        button#clear-history {
-            background: var(--accent-color);
-            border: none;
-            border-radius: 1rem;
-            color: white;
-            padding: 0.5rem 1rem;
-            font-family: var(--font-heading);
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-        }
-        button#clear-history:hover {
-            background: var(--accent-hover-color);
-        }
         #chat-box {
             flex-grow: 1;
             padding: 1.5rem;
@@ -74,14 +57,9 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            margin-bottom: 80px; /* Отступ снизу под фиксированную форму */
         }
-        #chat-box::-webkit-scrollbar {
-            width: 8px;
-        }
-        #chat-box::-webkit-scrollbar-track {
-            background: var(--bg-color);
-        }
+        #chat-box::-webkit-scrollbar { width: 8px; }
+        #chat-box::-webkit-scrollbar-track { background: var(--bg-color); }
         #chat-box::-webkit-scrollbar-thumb {
             background-color: var(--border-color);
             border-radius: 10px;
@@ -113,20 +91,13 @@
             opacity: 0.8;
         }
         #input-form {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 800px;
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
+            padding: 0.75rem;
+            margin: 1rem;
             background-color: var(--card-bg-color);
             border-radius: 1.5rem;
             gap: 0.5rem;
-            box-sizing: border-box;
-            z-index: 1000;
         }
         #user-input {
             flex-grow: 1;
@@ -136,13 +107,8 @@
             color: var(--text-primary-color);
             font-size: 1rem;
         }
-        #user-input:focus {
-            outline: none;
-        }
-        #user-input::placeholder {
-            color: var(--text-secondary-color);
-            opacity: 0.6;
-        }
+        #user-input:focus { outline: none; }
+        #user-input::placeholder { color: var(--text-secondary-color); opacity: 0.6; }
         #send-btn {
             background: var(--accent-color);
             border: none;
@@ -157,27 +123,19 @@
             justify-content: center;
             flex-shrink: 0;
         }
-        #send-btn:hover {
-            background: var(--accent-hover-color);
-            transform: scale(1.05);
-        }
+        #send-btn:hover { background: var(--accent-hover-color); transform: scale(1.05); }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="top-bar">
-            <h1>GPT Чат</h1>
-            <button id="clear-history" title="Очистить историю">Очистить историю</button>
+            <h1>Z AI</h1>
         </div>
-
         <div id="chat-box"></div>
-
         <form id="input-form" action="javascript:void(0);">
-            <input type="text" id="user-input" placeholder="Введите сообщение..." autocomplete="off" />
-            <button id="send-btn" type="submit" title="Отправить">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <input type="text" id="user-input" placeholder="Введите сообщение..." autocomplete="off">
+            <button id="send-btn" type="submit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
@@ -185,78 +143,53 @@
         </form>
     </div>
 
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        const chatBox = document.getElementById("chat-box");
-        const userInput = document.getElementById("user-input");
-        const sendBtn = document.getElementById("send-btn");
-        const clearBtn = document.getElementById("clear-history");
+        let tg = window.Telegram.WebApp;
+        let chat_id = tg.initDataUnsafe?.user?.id || null;
+
+        document.getElementById("input-form").addEventListener("submit", async () => {
+            const input = document.getElementById("user-input");
+            const message = input.value.trim();
+            if (!message) return;
+            if (!chat_id) return alert("chat_id не определён (запустите через Telegram WebApp)");
+
+            addMessage("Вы", message, "sent");
+            input.value = "";
+            input.disabled = true;
+            document.getElementById("send-btn").disabled = true;
+
+            try {
+                const res = await fetch("https://gpt-tg-2mop.onrender.com/api/ai", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ chat_id, message })
+                });
+
+                if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+                const data = await res.json();
+                addMessage("Z AI", data.response, "received");
+            } catch (err) {
+                addMessage("Система", "Ошибка соединения с сервером", "received");
+            } finally {
+                input.disabled = false;
+                document.getElementById("send-btn").disabled = false;
+                input.focus();
+            }
+        });
 
         function addMessage(sender, text, type) {
-            const card = document.createElement("div");
-            card.className = `message-card ${type}`;
-            card.innerHTML = `<strong>${sender}</strong>${text}`;
-            chatBox.appendChild(card);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            const box = document.getElementById("chat-box");
+            const msgDiv = document.createElement("div");
+            msgDiv.classList.add("message-card", type);
+            msgDiv.innerHTML = `<strong>${sender}</strong><span>${text}</span>`;
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
         }
 
-        async function sendMessage(message) {
-            addMessage("Вы", message, "sent");
-            userInput.value = "";
-            userInput.disabled = true;
-            sendBtn.disabled = true;
-
-            try {
-                const response = await fetch("/api/ai", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({message})
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status}`);
-                }
-
-                const data = await response.json();
-                if (data.response) {
-                    addMessage("GPT", data.response, "received");
-                } else {
-                    addMessage("Система", "Пустой ответ от сервера.", "received");
-                }
-            } catch (error) {
-                console.error("Ошибка запроса:", error);
-                addMessage("Система", "Ошибка соединения с сервером.", "received");
-            } finally {
-                userInput.disabled = false;
-                sendBtn.disabled = false;
-                userInput.focus();
-            }
-        }
-
-        document.getElementById("input-form").addEventListener("submit", () => {
-            const message = userInput.value.trim();
-            if (message) {
-                sendMessage(message);
-            }
-        });
-
-        clearBtn.addEventListener("click", async () => {
-            if (!confirm("Вы уверены, что хотите очистить историю?")) return;
-
-            try {
-                const response = await fetch("/api/clear_history", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({})
-                });
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status}`);
-                }
-                chatBox.innerHTML = "";
-            } catch (error) {
-                console.error("Ошибка очистки истории:", error);
-                alert("Не удалось очистить историю.");
-            }
-        });
+        window.onload = () => {
+            addMessage("Z AI", "Здравствуйте! Чем могу помочь?", "received");
+        };
     </script>
 </body>
 </html>
