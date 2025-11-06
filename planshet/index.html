@@ -1,183 +1,207 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#000000" />
-  <link rel="manifest" href="manifest.json" />
-  <title>Launcher</title>
-  <style>
-    html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      background: black;
-      color: white;
-      font-family: "Segoe UI", sans-serif;
-      overflow: hidden;
-    }
-    #slideshow {
-      position: fixed;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      transition: background-image 1s ease-in-out;
-    }
-    .glass3d {
-      --filter-glass3d: blur(15px) brightness(1) saturate(1);
-      --color-glass3d: hsl(178 76% 16% / 0.1);
-      --noise-glass3d: url("https://www.transparenttextures.com/patterns/egg-shell.png");
-      position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      min-width: 250px;
-      padding: 15px 25px;
-      border-radius: 16px;
-      text-align: center;
-      z-index: 3;
-    }
-    .glass3d::before {
-      content: "";
-      position: absolute; inset: 0;
-      backdrop-filter: var(--filter-glass3d);
-      background-color: var(--color-glass3d);
-      background-image: var(--noise-glass3d);
-      background-size: 100px;
-      border-radius: inherit;
-      z-index: 1;
-    }
-    .glass3d > * {
-      position: relative;
-      z-index: 2;
-    }
-    #datetime { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-    #date { font-size: 16px; margin-bottom: 10px; }
-    #weather {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      font-size: 16px;
-      line-height: 1.4;
-    }
-    .column {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    #addPhotos {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 10px;
-      color: white;
-      padding: 8px 12px;
-    }
-  </style>
-</head>
-<body>
-  <div id="slideshow"></div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>PhotoClock Launcher</title>
+<link rel="manifest" href="manifest.json">
 
-  <div class="glass3d">
-    <div id="datetime"></div>
-    <div id="date"></div>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: black;
+  color: white;
+  font-family: "Segoe UI", sans-serif;
+}
+
+#bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.glass3d {
+  --filter-glass3d: blur(15px) brightness(1) saturate(1);
+  --color-glass3d: hsl(178 76% 16% / 0.1);
+  --noise-glass3d: url("https://www.transparenttextures.com/patterns/egg-shell.png");
+
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  box-shadow:
+    0 0 0.75px hsl(205 20% 10% / 0.2),
+    0.7px 0.8px 1.2px -0.4px hsl(205 20% 10% / 0.1),
+    1.3px 1.5px 2.2px -0.8px hsl(205 20% 10% / 0.1),
+    2.3px 2.6px 3.9px -1.2px hsl(205 20% 10% / 0.1),
+    3.9px 4.4px 6.6px -1.7px hsl(205 20% 10% / 0.1),
+    6.5px 7.2px 10.9px -2.1px hsl(205 20% 10% / 0.1),
+    8px 9px 14px -2.5px hsl(205 20% 10% / 0.2);
+}
+.glass3d::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 3;
+  -webkit-backdrop-filter: var(--filter-glass3d);
+  backdrop-filter: var(--filter-glass3d);
+  background-color: var(--color-glass3d);
+  background-image: var(--noise-glass3d);
+  background-size: 100px;
+  background-repeat: repeat;
+}
+.glass3d::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 5;
+  box-shadow:
+    inset 2px 2px 1px -3px hsl(205 20% 90% / 0.8),
+    inset 4px 4px 2px -6px hsl(205 20% 90% / 0.3),
+    inset 1.5px 1.5px 1.5px -0.75px hsl(205 20% 90% / 0.15),
+    inset 1.5px 1.5px 0.25px hsl(205 20% 90% / 0.03),
+    inset 0 0 0.25px 0.5px hsl(205 20% 90% / 0.03);
+}
+.glass3d > * { position: relative; z-index: 6; }
+
+#info {
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 20px;
+}
+
+#clock {
+  font-size: 36px;
+  font-weight: bold;
+}
+
+#date {
+  font-size: 18px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+#weather {
+  margin-top: 6px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  font-size: 18px;
+}
+#weather div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+#weather .temp {
+  font-weight: bold;
+}
+#select-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.4);
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+<input type="file" id="fileInput" accept="image/*" hidden>
+<button id="select-btn">Выбрать фото</button>
+<img id="bg">
+
+<div class="glass3d" id="glass">
+  <div id="info">
+    <div id="clock">00:00:00</div>
+    <div id="date">1 января 1970</div>
     <div id="weather">
-      <div class="column" id="col1"></div>
-      <div class="column" id="col2"></div>
+      <div><div>🌅 Утро</div><div class="temp" id="morn">--° (--°)</div></div>
+      <div><div>🌇 День</div><div class="temp" id="day">--° (--°)</div></div>
+      <div><div>🌆 Вечер</div><div class="temp" id="eve">--° (--°)</div></div>
+      <div><div>🌃 Ночь</div><div class="temp" id="night">--° (--°)</div></div>
     </div>
   </div>
+</div>
 
-  <button id="addPhotos">📁 Фото</button>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 
-  <script>
-    const slideshow = document.getElementById("slideshow");
-    const dtElem = document.getElementById("datetime");
-    const dateElem = document.getElementById("date");
-    const col1 = document.getElementById("col1");
-    const col2 = document.getElementById("col2");
-    const addPhotosBtn = document.getElementById("addPhotos");
+const fileInput = document.getElementById('fileInput');
+const bg = document.getElementById('bg');
+const btn = document.getElementById('select-btn');
 
-    let photos = [];
-    let current = 0;
+btn.onclick = () => fileInput.click();
 
-    function updateClock() {
-      const now = new Date();
-      dtElem.textContent = now.toLocaleTimeString("ru-RU", { hour12: false });
-      dateElem.textContent = now.toLocaleDateString("ru-RU", {
-        weekday: "long",
-        day: "numeric",
-        month: "long"
-      });
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+fileInput.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    bg.src = ev.target.result; // base64 — безопасно
+  };
+  reader.readAsDataURL(file);
+};
 
-    async function fetchWeather() {
-      try {
-        const resp = await fetch(
-          "https://api.openweathermap.org/data/2.5/forecast?q=Moscow&appid=a4c685c23cd9f959b37857f2d6a3625f&units=metric&lang=ru"
-        );
-        const data = await resp.json();
-        const list = data.list.slice(0, 8 * 4);
-        const periods = { morning: [], day: [], evening: [], night: [] };
-        for (let item of list) {
-          const h = new Date(item.dt * 1000).getHours();
-          if (h >= 6 && h < 12) periods.morning.push(item);
-          else if (h >= 12 && h < 18) periods.day.push(item);
-          else if (h >= 18 && h < 24) periods.evening.push(item);
-          else periods.night.push(item);
+// 🕒 Часы и дата
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+
+  const months = ["января","февраля","марта","апреля","мая","июня","июля",
+                  "августа","сентября","октября","ноября","декабря"];
+  const d = now.getDate();
+  const mo = months[now.getMonth()];
+  const y = now.getFullYear();
+  document.getElementById('date').textContent = `${d} ${mo} ${y}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// 🌦 Погода по Москве
+const API = "a4c685c23cd9f959b37857f2d6a3625f";
+function updateWeather() {
+  fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Moscow&appid=${API}&units=metric&lang=ru`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data || !data.list) return;
+      const times = {morn: 6, day: 12, eve: 18, night: 0};
+      for (const [id, hour] of Object.entries(times)) {
+        const entry = data.list.find(x => new Date(x.dt * 1000).getHours() === hour);
+        if (entry) {
+          const temp = Math.round(entry.main.temp);
+          const feels = Math.round(entry.main.feels_like);
+          document.getElementById(id).textContent = `${temp}° (${feels}°)`;
         }
-        const avg = (arr) =>
-          arr.length
-            ? arr.reduce((a, b) => a + b.main.temp, 0) / arr.length
-            : null;
-        const feel = (arr) =>
-          arr.length
-            ? arr.reduce((a, b) => a + b.main.feels_like, 0) / arr.length
-            : null;
-        const desc = (arr) =>
-          arr.length ? arr[0].weather[0].description : "";
-
-        col1.innerHTML = `
-          <div>Утро: ${avg(periods.morning)?.toFixed(1)}° (${feel(periods.morning)?.toFixed(1)}°) — ${desc(periods.morning)}</div>
-          <div>День: ${avg(periods.day)?.toFixed(1)}° (${feel(periods.day)?.toFixed(1)}°) — ${desc(periods.day)}</div>
-        `;
-        col2.innerHTML = `
-          <div>Ночь: ${avg(periods.night)?.toFixed(1)}° (${feel(periods.night)?.toFixed(1)}°) — ${desc(periods.night)}</div>
-          <div>Вечер: ${avg(periods.evening)?.toFixed(1)}° (${feel(periods.evening)?.toFixed(1)}°) — ${desc(periods.evening)}</div>
-        `;
-      } catch (e) {
-        col1.textContent = "Ошибка погоды";
-        col2.textContent = "";
       }
-    }
-    fetchWeather();
-    setInterval(fetchWeather, 60 * 60 * 1000);
-
-    async function updateSlideshow() {
-      if (photos.length === 0) return;
-      slideshow.style.backgroundImage = `url(${photos[current]})`;
-      current = (current + 1) % photos.length;
-    }
-    setInterval(updateSlideshow, 10000);
-
-    addPhotosBtn.onclick = async () => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.multiple = true;
-      input.accept = "image/*";
-      input.onchange = () => {
-        const files = Array.from(input.files);
-        photos = files.map(f => URL.createObjectURL(f));
-        updateSlideshow();
-      };
-      input.click();
-    };
-    
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
-  </script>
+    })
+    .catch(() => {});
+}
+updateWeather();
+setInterval(updateWeather, 60 * 60 * 1000);
+</script>
 </body>
 </html>
