@@ -1,231 +1,187 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Инфо-дисплей</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json" />
+  <title>PhotoClock</title>
   <style>
-    body {
-      margin: 0;
-      height: 100vh;
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: black;
+      color: white;
+      font-family: "Segoe UI", sans-serif;
       overflow: hidden;
-      font-family: "Segoe UI", Arial, sans-serif;
-      color: #fff;
     }
-
-    /* Слайдшоу */
     #slideshow {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: background-image 1s ease-in-out;
+    }
+    .glass3d {
+      --filter-glass3d: blur(15px) brightness(1) saturate(1);
+      --color-glass3d: hsl(178 76% 16% / 0.1);
+      --noise-glass3d: url("https://www.transparenttextures.com/patterns/egg-shell.png");
       position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
-    #slideshow img {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0;
-      transition: opacity 2s;
-    }
-    #slideshow img.active {
-      opacity: 1;
-    }
-
-    /* Glass UI */
-    .glass3d { 
-      --filter-glass3d: blur(15px) brightness(1) saturate(1); 
-      --color-glass3d: hsl(178 76% 16% / 0.2); 
-      --noise-glass3d: url("https://www.transparenttextures.com/patterns/egg-shell.png"); 
-
-      position: relative; 
-      z-index: 4; 
-      box-shadow:  
-        0 0 0.75px hsl(205 20% 10% / 0.2), 
-        0.7px 0.8px 1.2px -0.4px hsl(205 20% 10% / 0.1), 
-        1.3px 1.5px 2.2px -0.8px hsl(205 20% 10% / 0.1), 
-        2.3px 2.6px 3.9px -1.2px hsl(205 20% 10% / 0.1), 
-        3.9px 4.4px 6.6px -1.7px hsl(205 20% 10% / 0.1), 
-        6.5px 7.2px 10.9px -2.1px hsl(205 20% 10% / 0.1), 
-        8px 9px 14px -2.5px hsl(205 20% 10% / 0.2); 
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 250px;
+      padding: 15px 25px;
       border-radius: 16px;
-      padding: 20px;
-      margin: 20px;
+      text-align: center;
+      z-index: 3;
     }
-    .glass3d::before { 
-      content: ""; 
-      position: absolute; 
-      inset: 0; 
-      pointer-events: none; 
-      border-radius: inherit; 
-      overflow: hidden; 
-      z-index: 3; 
-      -webkit-backdrop-filter: var(--filter-glass3d); 
-      backdrop-filter: var(--filter-glass3d); 
-      background-color: var(--color-glass3d); 
-      background-image: var(--noise-glass3d); 
-      background-size: 100px; 
-      background-repeat: repeat; 
+    .glass3d::before {
+      content: "";
+      position: absolute; inset: 0;
+      backdrop-filter: var(--filter-glass3d);
+      background-color: var(--color-glass3d);
+      background-image: var(--noise-glass3d);
+      background-size: 100px;
+      border-radius: inherit;
+      z-index: 1;
     }
-    .glass3d::after { 
-      content: ""; 
-      position: absolute; 
-      inset: 0; 
-      pointer-events: none; 
-      border-radius: inherit; 
-      overflow: hidden; 
-      z-index: 5; 
-      box-shadow: 
-        inset 2px 2px 1px -3px hsl(205 20% 90% / 0.8), 
-        inset 4px 4px 2px -6px hsl(205 20% 90% / 0.3), 
-        inset 1.5px 1.5px 1.5px -0.75px hsl(205 20% 90% / 0.15), 
-        inset 1.5px 1.5px 0.25px hsl(205 20% 90% / 0.03), 
-        inset 0 0 0.25px 0.5px hsl(205 20% 90% / 0.03); 
-    }
-    .glass3d > * { 
-      position: relative; 
-      z-index: 6; 
-    }
-
-    /* Макет */
-    .overlay {
+    .glass3d > * {
       position: relative;
-      z-index: 10;
+      z-index: 2;
+    }
+    #datetime { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+    #date { font-size: 16px; margin-bottom: 10px; }
+    #weather {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .column {
       display: flex;
       flex-direction: column;
-      height: 100%;
-      justify-content: space-between;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 6px;
     }
-
-    .weather-blocks {
-      display: flex;
-      justify-content: space-around;
-      gap: 20px;
-    }
-
-    .weather-column {
-      flex: 1;
-      text-align: center;
-    }
-
-    .weather-column h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-
-    .time {
-      font-size: 36px;
-      font-weight: bold;
-    }
-
-    .date {
-      font-size: 20px;
+    #addPhotos {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      color: white;
+      padding: 8px 12px;
     }
   </style>
 </head>
 <body>
-  <!-- Слайдшоу -->
-  <div id="slideshow">
-    <img src="https://avatars.mds.yandex.net/i?id=885bb6c842a0dd60572d2c1e9b45b5c9_l-8497013-images-thumbs&n=33&w=1728&h=1080" class="active">
-  </div>
+  <div id="slideshow"></div>
 
-  <!-- Поверх -->
-  <div class="overlay">
-    <div class="glass3d top-bar">
-      <div class="date" id="date">--</div>
-      <div class="time" id="time">--:--:--</div>
-      <div id="currentTemp">--°</div>
-    </div>
-
-    <div class="glass3d weather-blocks" id="weather">
-      <div class="weather-column" id="today">
-        <h3>Сегодня</h3>
-      </div>
-      <div class="weather-column" id="tomorrow">
-        <h3>Завтра</h3>
-      </div>
+  <div class="glass3d">
+    <div id="datetime"></div>
+    <div id="date"></div>
+    <div id="weather">
+      <div class="column" id="col1"></div>
+      <div class="column" id="col2"></div>
     </div>
   </div>
+
+  <button id="addPhotos">📁 Фото</button>
 
   <script>
-    const apiKey = "f304f6ed52ee424f82892819252809";
-    const city = "Moscow";
+    const slideshow = document.getElementById("slideshow");
+    const dtElem = document.getElementById("datetime");
+    const dateElem = document.getElementById("date");
+    const col1 = document.getElementById("col1");
+    const col2 = document.getElementById("col2");
+    const addPhotosBtn = document.getElementById("addPhotos");
 
-    function textToEmoji(text) {
-      text = text.toLowerCase();
-      if (text.includes("солн")) return "☀️";
-      if (text.includes("облачно")) return "⛅";
-      if (text.includes("пасмурно")) return "☁️";
-      if (text.includes("дожд")) return "🌧️";
-      if (text.includes("гроза")) return "⛈️";
-      if (text.includes("снег")) return "🌨️";
-      if (text.includes("туман")) return "🌫️";
-      return "🌡️";
-    }
-
-    async function loadWeather() {
-      try {
-        const res = await fetch(
-          `http://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=2&lang=ru`
-        );
-        const data = await res.json();
-
-        // Температура в топ-баре
-        document.getElementById("currentTemp").textContent =
-          `${Math.round(data.current.temp_c)}° ${textToEmoji(data.current.condition.text)}`;
-
-        function renderDay(dayData, elemId) {
-          const parts = [
-            { label: "Ночь", hour: 0 },
-            { label: "Утро", hour: 6 },
-            { label: "День", hour: 12 },
-            { label: "Вечер", hour: 18 },
-          ];
-          let html = `<h3>${elemId === "today" ? "Сегодня" : "Завтра"}</h3>`;
-          html += "<div style='display:flex; gap:15px; justify-content:center;'>";
-          parts.forEach(p => {
-            const h = dayData.hour[p.hour];
-            html += `<span>${p.label}: ${Math.round(h.temp_c)}° ${textToEmoji(h.condition.text)}</span>`;
-          });
-          html += "</div>";
-          document.getElementById(elemId).innerHTML = html;
-        }
-
-        renderDay(data.forecast.forecastday[0], "today");
-        renderDay(data.forecast.forecastday[1], "tomorrow");
-      } catch (e) {
-        document.getElementById("weather").textContent = "Ошибка загрузки погоды";
-      }
-    }
+    let photos = JSON.parse(localStorage.getItem("photos") || "[]");
+    let current = 0;
 
     function updateClock() {
       const now = new Date();
-      document.getElementById("time").textContent =
-        now.toLocaleTimeString("ru-RU", { hour12: false });
-      document.getElementById("date").textContent =
-        now.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+      dtElem.textContent = now.toLocaleTimeString("ru-RU", { hour12: false });
+      dateElem.textContent = now.toLocaleDateString("ru-RU", {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+      });
     }
-
-    // Слайдшоу
-    const slides = document.querySelectorAll("#slideshow img");
-    let current = 0;
-    setInterval(() => {
-      slides[current].classList.remove("active");
-      current = (current + 1) % slides.length;
-      slides[current].classList.add("active");
-    }, 8000);
-
-    loadWeather();
-    setInterval(loadWeather, 10 * 60 * 1000);
     setInterval(updateClock, 1000);
     updateClock();
+
+    async function fetchWeather() {
+      try {
+        const resp = await fetch(
+          "https://api.openweathermap.org/data/2.5/forecast?q=Moscow&appid=a4c685c23cd9f959b37857f2d6a3625f&units=metric&lang=ru"
+        );
+        const data = await resp.json();
+        const list = data.list.slice(0, 8 * 4);
+        const periods = { morning: [], day: [], evening: [], night: [] };
+        for (let item of list) {
+          const h = new Date(item.dt * 1000).getHours();
+          if (h >= 6 && h < 12) periods.morning.push(item);
+          else if (h >= 12 && h < 18) periods.day.push(item);
+          else if (h >= 18 && h < 24) periods.evening.push(item);
+          else periods.night.push(item);
+        }
+        const avg = (arr) =>
+          arr.length
+            ? arr.reduce((a, b) => a + b.main.temp, 0) / arr.length
+            : null;
+        const feel = (arr) =>
+          arr.length
+            ? arr.reduce((a, b) => a + b.main.feels_like, 0) / arr.length
+            : null;
+        const desc = (arr) =>
+          arr.length ? arr[0].weather[0].description : "";
+
+        col1.innerHTML = `
+          <div>Утро: ${avg(periods.morning)?.toFixed(1)}° (${feel(periods.morning)?.toFixed(1)}°) — ${desc(periods.morning)}</div>
+          <div>День: ${avg(periods.day)?.toFixed(1)}° (${feel(periods.day)?.toFixed(1)}°) — ${desc(periods.day)}</div>
+        `;
+        col2.innerHTML = `
+          <div>Ночь: ${avg(periods.night)?.toFixed(1)}° (${feel(periods.night)?.toFixed(1)}°) — ${desc(periods.night)}</div>
+          <div>Вечер: ${avg(periods.evening)?.toFixed(1)}° (${feel(periods.evening)?.toFixed(1)}°) — ${desc(periods.evening)}</div>
+        `;
+      } catch (e) {
+        col1.textContent = "Ошибка погоды";
+        col2.textContent = "";
+      }
+    }
+    fetchWeather();
+    setInterval(fetchWeather, 60 * 60 * 1000);
+
+    async function updateSlideshow() {
+      if (photos.length === 0) return;
+      slideshow.style.backgroundImage = `url(${photos[current]})`;
+      current = (current + 1) % photos.length;
+    }
+    setInterval(updateSlideshow, 10000);
+
+    addPhotosBtn.onclick = async () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.multiple = true;
+      input.accept = "image/*";
+      input.onchange = () => {
+        const files = Array.from(input.files);
+        photos = files.map(f => URL.createObjectURL(f));
+        localStorage.setItem("photos", JSON.stringify(photos));
+        updateSlideshow();
+      };
+      input.click();
+    };
+
+    if (photos.length) updateSlideshow();
+
+    // ✅ Регистрация service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
   </script>
 </body>
 </html>
