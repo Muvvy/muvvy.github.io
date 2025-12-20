@@ -1,15 +1,55 @@
 {
-  "name": "AI Assistant Pro",
+  "name": "AI Assistant",
   "short_name": "AI Chat",
-  "start_url": ".",
+  "description": "AI чат с распознаванием текста с фотографий",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay"],
+  "orientation": "portrait",
   "background_color": "#09090b",
   "theme_color": "#18181b",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/1698/1698535.png",
+      "sizes": "72x72 96x96 128x128 144x144 152x152 192x192 384x384 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1698/1698535.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://via.placeholder.com/1080x1920/18181b/e4e4e7?text=AI+Chat",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "https://via.placeholder.com/1920x1080/18181b/e4e4e7?text=AI+Assistant",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Новый чат",
+      "short_name": "Чат",
+      "description": "Начать новый разговор",
+      "url": "/?new",
+      "icons": [
+        {
+          "src": "https://cdn-icons-png.flaticon.com/512/1698/1698535.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }
