@@ -1,29 +1,455 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Muvvy — Добро пожаловать</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>AI Assistant</title>
+<meta name="theme-color" content="#18181b">
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+
+<style>
+/* --- ТЕМА И ЦВЕТА --- */
+:root {
+  --bg-body: #09090b;       /* Почти черный фон страницы */
+  --bg-app: #18181b;        /* Темно-серый фон приложения */
+  --border: #27272a;        /* Границы */
+  --msg-user: #f4f4f5;      /* Сообщение юзера (светлое) */
+  --text-user: #09090b;     /* Текст юзера */
+  --msg-bot: #27272a;       /* Сообщение бота (темное) */
+  --text-bot: #e4e4e7;      /* Текст бота */
+  --accent: #ffffff;        /* Иконки/кнопки */
+  --input-area: #09090b;    /* Фон ввода */
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-bot);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Оболочка приложения */
+.app {
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  background: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Скругление на десктопе */
+@media (min-width: 500px) {
+  .app {
+    height: 90vh;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* --- ШАПКА --- */
+header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: rgba(24, 24, 27, 0.9);
+  z-index: 10;
+}
+
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: #71717a;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--border);
+  color: #fff;
+}
+
+/* --- СПИСОК СООБЩЕНИЙ --- */
+#chat {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+}
+
+#chat::-webkit-scrollbar { width: 5px; }
+#chat::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+
+.msg {
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.5;
+  font-size: 15px;
+  word-wrap: break-word;
+  white-space: pre-wrap; /* Сохраняет абзацы */
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.msg img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin-top: 5px;
+  display: block;
+}
+
+.user {
+  align-self: flex-end;
+  background: var(--msg-user);
+  color: var(--text-user);
+  border-bottom-right-radius: 4px;
+}
+
+.bot {
+  align-self: flex-start;
+  background: var(--msg-bot);
+  color: var(--text-bot);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* --- ИНДИКАТОР ЗАГРУЗКИ --- */
+.typing-indicator {
+  display: none; /* Скрыт по умолчанию */
+  align-self: flex-start;
+  background: var(--msg-bot);
+  padding: 12px 16px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  gap: 5px;
+  align-items: center;
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #71717a;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.dot:nth-child(1) { animation-delay: -0.32s; }
+.dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+/* --- ОБЛАСТЬ ВВОДА --- */
+footer {
+  padding: 16px;
+  background: var(--bg-app);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.input-box {
+  flex: 1;
+  background: var(--input-area);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.input-box:focus-within {
+  border-color: #52525b;
+}
+
+textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 15px;
+  resize: none;
+  max-height: 120px;
+  padding: 8px 0;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.send-btn {
+  background: #fff;
+  color: #000;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+  flex-shrink: 0;
+}
+
+.send-btn:hover { transform: scale(1.05); background: #e4e4e7; }
+.send-btn:disabled { background: #3f3f46; color: #71717a; cursor: default; transform: none; }
+
+</style>
 </head>
 <body>
-  <div class="main-container">
-    <div class="welcome-card">
-      
-      <div class="logo-container">
-        <img src="logo.png" alt="Muvvy Logo" class="logo-img" />
-      </div>
 
-      <h1>Добро пожаловать в Muvvy</h1>
-      <p>Твоя новая платформа для общения и идей.</p>
+<div class="app">
+  <header>
+    <div class="title-group">
+      <div class="status"></div>
+      <h1>AI Chat</h1>
+    </div>
+    <button class="btn-icon" onclick="clearHistory()" title="Удалить переписку">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+    </button>
+  </header>
 
-      <div class="button-container">
-        <a href="register/" class="button button-register">Регистрация</a>
-        <a href="login/" class="button button-login">Вход</a>
-      </div>
-
+  <div id="chat">
+    <div class="msg bot">Привет! Я готов помочь. Пиши текст или прикрепи фото для распознавания.</div>
+    
+    <div class="typing-indicator" id="loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
     </div>
   </div>
+
+  <footer>
+    <input type="file" id="imageInput" accept="image/*" hidden>
+    
+    <button class="btn-icon" onclick="imageInput.click()" title="Загрузить фото">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+    </button>
+
+    <div class="input-box">
+      <textarea id="input" rows="1" placeholder="Сообщение..."></textarea>
+    </div>
+
+    <button class="send-btn" onclick="send()" id="sendBtn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+    </button>
+  </footer>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+const loader = document.getElementById("loader");
+const input = document.getElementById("input");
+const imageInput = document.getElementById("imageInput");
+const sendBtn = document.getElementById("sendBtn");
+
+// История чата (текст)
+const savedHistory = localStorage.getItem("ai_chat_v3");
+let history = savedHistory ? JSON.parse(savedHistory) : [];
+
+// Восстановление истории при загрузке
+history.forEach(m => {
+  if (m.role !== 'system') {
+    addMessageToUI(m.content, m.role === "user" ? "user" : "bot", false);
+  }
+});
+
+// --- ГЛАВНАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ СООБЩЕНИЙ ---
+function addMessageToUI(content, type, isImage = false) {
+  const div = document.createElement("div");
+  div.className = "msg " + type;
+  
+  if (isImage) {
+    const img = document.createElement("img");
+    img.src = content;
+    div.appendChild(img);
+  } else {
+    div.textContent = content;
+  }
+  
+  // Добавляем сообщение
+  chat.appendChild(div);
+  
+  // Перемещаем лоадер в самый конец (чтобы он всегда был после сообщений)
+  chat.appendChild(loader);
+  
+  // Скролл вниз
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// Отправка сообщения
+async function send() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Очистка поля
+  input.value = "";
+  input.style.height = 'auto'; 
+  
+  // Показать сообщение юзера
+  addMessageToUI(text, "user");
+  
+  // Сохранить в историю и память
+  history.push({ role: "user", content: text });
+  saveHistory();
+
+  // Включить загрузку
+  toggleLoader(true);
+
+  try {
+    const context = [
+      { role: "system", content: "Ты полезный помощник. Отвечай кратко." },
+      ...history.slice(-8) // берем последние 8 сообщений
+    ];
+
+    const res = await fetch("https://text.pollinations.ai/openai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: context, model: "openai" })
+    });
+
+    if (!res.ok) throw new Error("Server error");
+
+    const data = await res.json();
+    const reply = data.choices[0].message.content;
+
+    addMessageToUI(reply, "bot");
+    history.push({ role: "assistant", content: reply });
+    saveHistory();
+
+  } catch (err) {
+    addMessageToUI("⚠️ Ошибка сети. Попробуйте позже.", "bot");
+    console.error(err);
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+function toggleLoader(show) {
+  loader.style.display = show ? "flex" : "none";
+  sendBtn.disabled = show;
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function saveHistory() {
+  // Фильтруем (не сохраняем base64 картинки, чтобы не забить память)
+  const safe = history.filter(h => h.content.length < 2000);
+  localStorage.setItem("ai_chat_v3", JSON.stringify(safe));
+}
+
+// Распознавание текста (OCR)
+imageInput.addEventListener("change", async () => {
+  const file = imageInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    // Показываем фото в чате (не сохраняя в историю навсегда)
+    addMessageToUI(e.target.result, "user", true);
+
+    toggleLoader(true); // Показываем анимацию
+    
+    // Временно выводим текст бота
+    const statusMsg = document.createElement("div");
+    statusMsg.className = "msg bot";
+    statusMsg.textContent = "🔍 Читаю текст с картинки...";
+    chat.insertBefore(statusMsg, loader); // Вставляем перед лоадером
+
+    try {
+      const result = await Tesseract.recognize(file, "rus+eng");
+      const text = result.data.text.trim();
+      
+      statusMsg.remove(); // Удаляем статус
+
+      if (text) {
+        input.value = text;
+        autoResize(input);
+        addMessageToUI("✅ Текст найден! Отредактируй его в поле ввода.", "bot");
+      } else {
+        addMessageToUI("❌ Текст не найден.", "bot");
+      }
+    } catch (e) {
+      statusMsg.remove();
+      addMessageToUI("❌ Ошибка обработки фото.", "bot");
+    } finally {
+      toggleLoader(false);
+      imageInput.value = "";
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+// Авто-высота поля ввода
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+input.addEventListener('input', () => autoResize(input));
+
+// Enter = Отправить, Shift+Enter = Новая строка
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    if(window.innerWidth > 600) send(); // На десктопе сразу отправляем
+    else send(); // На мобильном тоже (поведение Telegram)
+  }
+});
+
+function clearHistory() {
+  if (confirm("Очистить чат?")) {
+    localStorage.removeItem("ai_chat_v3");
+    history = [];
+    chat.innerHTML = "";
+    chat.appendChild(loader); // Возвращаем лоадер на место
+    addMessageToUI("История очищена.", "bot");
+  }
+}
+</script>
+
 </body>
 </html>
