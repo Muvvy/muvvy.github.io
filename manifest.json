@@ -12,30 +12,16 @@
   "categories": ["productivity", "utilities"],
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/Muvvy/muvvy.github.io/refs/heads/main/logo_384.png",
-      "sizes": "72x72 96x96 128x128 144x144 152x152 192x192 384x384 512x512",
+      "src": "/logo_384.png",
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://raw.githubusercontent.com/Muvvy/muvvy.github.io/refs/heads/main/logo_512.png",
+      "src": "/logo_512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "https://via.placeholder.com/1080x1920/18181b/e4e4e7?text=AI+Chat",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "https://via.placeholder.com/1920x1080/18181b/e4e4e7?text=AI+Assistant",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide"
     }
   ],
   "shortcuts": [
@@ -43,13 +29,7 @@
       "name": "Новый чат",
       "short_name": "Чат",
       "description": "Начать новый разговор",
-      "url": "/?new",
-      "icons": [
-        {
-          "src": "https://cdn-icons-png.flaticon.com/512/1698/1698535.png",
-          "sizes": "96x96"
-        }
-      ]
+      "url": "/?new"
     }
   ]
 }
