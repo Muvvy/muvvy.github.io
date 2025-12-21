@@ -1,8 +1,10 @@
-const CACHE_NAME = 'ai-chat-v1';
+const CACHE_NAME;
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json',
+  './logo_384.png',
+  './logo_512.png'
 ];
 
 // Установка Service Worker
