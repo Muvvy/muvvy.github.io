@@ -12,7 +12,7 @@
   "categories": ["productivity", "utilities"],
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1698/1698535.png",
+      "src": "https://raw.githubusercontent.com/Muvvy/muvvy.github.io/refs/heads/main/logo_384.png",
       "sizes": "72x72 96x96 128x128 144x144 152x152 192x192 384x384 512x512",
       "type": "image/png",
       "purpose": "any maskable"
