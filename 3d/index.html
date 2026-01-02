@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Модель - Рабочий пример</title>
+    <title>3D Модель с полным управлением</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         * {
@@ -13,53 +13,313 @@
         }
         
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 15px;
+            overflow-x: hidden;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin: 20px 0 30px 0;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 800px;
         }
         
         h1 {
-            font-size: 2.8rem;
+            font-size: 2.2rem;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.5;
         }
         
         .container {
             background: white;
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-width: 1200px;
+            max-width: 1000px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
             margin-bottom: 30px;
         }
         
+        /* Полноэкранный контейнер для модели */
+        .model-wrapper {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            min-height: 500px;
+            background: #000;
+            border-radius: 20px 20px 0 0;
+            overflow: hidden;
+        }
+        
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            --poster-color: transparent;
+            --progress-bar-color: #2575fc;
+            --progress-bar-height: 4px;
+        }
+        
+        /* Стили для элементов управления */
+        .controls-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 50px;
+            z-index: 100;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            user-select: none;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .control-btn.active {
+            background: #2575fc;
+            box-shadow: 0 0 15px rgba(37, 117, 252, 0.5);
+        }
+        
+        .control-btn.large {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+        }
+        
+        /* Панель инструкций */
+        .instructions-panel {
+            background: white;
+            padding: 25px 30px;
+            border-top: 1px solid #eee;
+        }
+        
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 15px;
+        }
+        
+        .instruction-card {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #2575fc;
+        }
+        
+        .instruction-card h3 {
+            color: #2575fc;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .instruction-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .instruction-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+        }
+        
+        .instruction-card li:before {
+            content: "•";
+            color: #2575fc;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        /* Индикаторы управления */
+        .touch-hints {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: none;
+            gap: 10px;
+            z-index: 90;
+        }
+        
+        .touch-hint {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Панель загрузки */
+        .upload-section {
+            background: linear-gradient(to right, #f8f9ff, #ffffff);
+            padding: 25px;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+        
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(to right, #2575fc, #6a11cb);
+            color: white;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(37, 117, 252, 0.3);
+        }
+        
+        .file-label:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(37, 117, 252, 0.4);
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .model-wrapper {
+                height: 60vh;
+                min-height: 400px;
+                border-radius: 15px 15px 0 0;
+            }
+            
+            .controls-overlay {
+                padding: 12px 20px;
+                gap: 10px;
+                bottom: 15px;
+            }
+            
+            .control-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+            
+            .control-btn.large {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .touch-hints {
+                display: flex;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .model-wrapper {
+                height: 50vh;
+                min-height: 350px;
+            }
+            
+            .controls-overlay {
+                padding: 10px 15px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .control-btn.large {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .instructions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Анимация загрузки */
         .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 500px;
-            background: #f5f5f5;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            z-index: 200;
+            color: white;
+            text-align: center;
         }
         
         .spinner {
             width: 60px;
             height: 60px;
-            border: 6px solid #ddd;
-            border-top: 6px solid #667eea;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #2575fc;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
@@ -70,154 +330,40 @@
             100% { transform: rotate(360deg); }
         }
         
-        .model-viewer-container {
-            width: 100%;
-            height: 600px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        model-viewer {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 50px;
-            background: linear-gradient(to right, #667eea, #764ba2);
+        /* Сообщение об ошибке */
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 59, 48, 0.9);
             color: white;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .btn.reset {
-            background: linear-gradient(to right, #ff5e62, #ff9966);
-        }
-        
-        .btn.ar {
-            background: linear-gradient(to right, #00b09b, #96c93d);
-        }
-        
-        .instructions {
-            background: #f8f9fa;
             padding: 25px;
             border-radius: 15px;
-            margin-top: 30px;
-            border-left: 5px solid #667eea;
-        }
-        
-        .instructions h3 {
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .instructions ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .instructions li {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            align-items: center;
-        }
-        
-        .instructions li:before {
-            content: "→";
-            color: #667eea;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        
-        .error {
-            background: #fff5f5;
-            border: 2px solid #fed7d7;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
             text-align: center;
-            color: #c53030;
+            max-width: 400px;
+            width: 90%;
+            z-index: 200;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
         
-        .troubleshooting {
-            background: #fff8e1;
+        /* GitHub Pages специфичные стили */
+        .github-tip {
+            background: #24292e;
+            color: white;
             padding: 20px;
             border-radius: 10px;
-            margin-top: 20px;
-            border: 2px dashed #ffb300;
-        }
-        
-        .test-model-section {
-            background: #e8f4f8;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 30px;
-            text-align: center;
-        }
-        
-        .file-upload {
             margin: 20px 0;
-            padding: 20px;
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            background: #f8f9ff;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .model-viewer-container {
-                height: 400px;
-            }
-            
-            .btn {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🎮 3D Модель на сайте</h1>
-        <p>Простой и рабочий просмотрщик 3D моделей</p>
+        <h1>🚀 3D Модель с полным управлением</h1>
+        <p class="subtitle">Работает на GitHub Pages • Управление на ПК и телефоне • Загрузите свою модель</p>
     </div>
     
     <div class="container">
@@ -225,319 +371,479 @@
         <div id="loading" class="loading">
             <div class="spinner"></div>
             <h3>Загружаем 3D модель...</h3>
-            <p id="progress-text">Инициализация просмотрщика</p>
-            <p style="color: #666; margin-top: 20px; max-width: 500px; text-align: center;">
-                Если модель долго не загружается, используйте тестовую модель ниже
-            </p>
+            <p id="progress-text">Инициализация системы управления</p>
         </div>
         
-        <!-- Основной просмотрщик -->
-        <div class="model-viewer-container">
+        <!-- Основной контейнер модели -->
+        <div class="model-wrapper">
+            <!-- 3D просмотрщик -->
             <model-viewer
-                id="my-model-viewer"
-                src=""  <!-- Пустой src - мы установим его через JS -->
-                alt="3D модель"
+                id="model-viewer"
+                src=""
+                alt="3D Модель"
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 environment-image="neutral"
                 shadow-intensity="1"
                 camera-controls
                 auto-rotate
-                exposure="1"
-                style="display: none;"
+                camera-orbit="0deg 75deg 105%"
+                field-of-view="45deg"
+                interaction-policy="allow-when-focused"
+                touch-action="pan-y"
+                style="width: 100%; height: 100%;"
             >
-                <div class="controls" slot="controls">
-                    <button class="btn" onclick="toggleAutoRotate()">
-                        <span id="rotate-icon">🔄</span>
-                        <span id="rotate-text">Вращение</span>
-                    </button>
-                    <button class="btn reset" onclick="resetView()">
-                        🏠 Сбросить
-                    </button>
-                    <button class="btn" onclick="toggleShadow()">
-                        <span id="shadow-icon">🌓</span>
-                        <span id="shadow-text">Тени</span>
-                    </button>
-                    <button class="btn ar" onclick="enterAR()">
-                        👁️ AR
-                    </button>
-                </div>
             </model-viewer>
-        </div>
-        
-        <!-- Основные кнопки управления -->
-        <div class="controls">
-            <button class="btn" onclick="changeEnvironment('neutral')">
-                🏙️ Нейтральное
-            </button>
-            <button class="btn" onclick="changeEnvironment('legacy')">
-                🏛️ Классика
-            </button>
-            <button class="btn" onclick="changeEnvironment('spruit-sunrise')">
-                🌅 Рассвет
-            </button>
-            <button class="btn" onclick="downloadModel()">
-                ⬇️ Скачать тестовую модель
-            </button>
-        </div>
-        
-        <!-- Инструкции -->
-        <div class="instructions">
-            <h3>📋 Как это работает:</h3>
-            <ul>
-                <li><strong>Вращение:</strong> ЛКМ + движение мыши</li>
-                <li><strong>Приближение:</strong> Колесико мыши</li>
-                <li><strong>Перемещение:</strong> ПКМ + движение мыши</li>
-                <li><strong>AR:</strong> Нажмите кнопку AR (работает на смартфонах)</li>
-            </ul>
-        </div>
-        
-        <!-- Тестовая модель -->
-        <div class="test-model-section">
-            <h3>🔧 Тестовая модель</h3>
-            <p>Если ваша модель не загружается, попробуйте эту:</p>
-            <div class="controls">
-                <button class="btn" onclick="loadTestModel('duck')">
-                    🦆 Тестовая утка
+            
+            <!-- Подсказки для тач-устройств -->
+            <div class="touch-hints" id="touch-hints">
+                <div class="touch-hint">👆 Один палец - вращение</div>
+                <div class="touch-hint">✌️ Два пальца - масштабирование</div>
+            </div>
+            
+            <!-- Панель управления -->
+            <div class="controls-overlay">
+                <button class="control-btn large" id="rotate-btn" title="Включить вращение">
+                    🔄
                 </button>
-                <button class="btn" onclick="loadTestModel('fox')">
-                    🦊 Лисица
+                <button class="control-btn" id="reset-btn" title="Сбросить вид">
+                    🏠
+                </button>
+                <button class="control-btn" id="zoom-in-btn" title="Приблизить">
+                    🔍+
+                </button>
+                <button class="control-btn" id="zoom-out-btn" title="Отдалить">
+                    🔍-
+                </button>
+                <button class="control-btn" id="ar-btn" title="AR-режим">
+                    👁️
+                </button>
+                <button class="control-btn" id="fullscreen-btn" title="Полный экран">
+                    ⛶
                 </button>
             </div>
         </div>
         
-        <!-- Загрузка своей модели -->
-        <div class="file-upload">
-            <h3>📁 Загрузите свою модель</h3>
-            <p>Выберите файл .glb или .gltf (до 50 МБ)</p>
-            <input type="file" id="model-upload" accept=".glb,.gltf" style="margin: 15px 0;">
-            <p style="font-size: 14px; color: #666;">
-                Рекомендуем использовать формат .glb - он содержит текстуры внутри файла
-            </p>
+        <!-- Панель инструкций -->
+        <div class="instructions-panel">
+            <h2>🎮 Управление моделью</h2>
+            <div class="instructions-grid">
+                <div class="instruction-card">
+                    <h3>🖱️ Для ПК (компьютер)</h3>
+                    <ul>
+                        <li><strong>Вращение:</strong> ЛКМ + движение мыши</li>
+                        <li><strong>Приближение:</strong> Колесико мыши вперед</li>
+                        <li><strong>Отдаление:</strong> Колесико мыши назад</li>
+                        <li><strong>Панорамирование:</strong> ПКМ + движение мыши</li>
+                        <li><strong>Быстрый сброс:</strong> Двойной клик по модели</li>
+                    </ul>
+                </div>
+                
+                <div class="instruction-card">
+                    <h3>📱 Для телефона/планшета</h3>
+                    <ul>
+                        <li><strong>Вращение:</strong> Один палец + движение</li>
+                        <li><strong>Масштабирование:</strong> Два пальца + раздвижение/сдвиг</li>
+                        <li><strong>Панорамирование:</strong> Два пальца + движение</li>
+                        <li><strong>Быстрый сброс:</strong> Двойное касание</li>
+                        <li><strong>AR-режим:</strong> Кнопка 👁️ (требуется камера)</li>
+                    </ul>
+                </div>
+            </div>
         </div>
         
-        <!-- Устранение неполадок -->
-        <div class="troubleshooting">
-            <h3>🔍 Почему модель может не загружаться:</h3>
-            <ul>
-                <li>Файл модели слишком большой (оптимально до 10 МБ)</li>
-                <li>Неправильный путь к файлу</li>
-                <li>Файл модели в неподдерживаемом формате</li>
-                <li>Проблемы с доступом к файлу</li>
-            </ul>
-            <p style="margin-top: 15px;">
-                <strong>Решение:</strong> Используйте тестовые модели выше для проверки
+        <!-- Секция для GitHub Pages -->
+        <div class="upload-section">
+            <h2>📁 Загрузка модели на GitHub Pages</h2>
+            <p>Для корректной работы на GitHub Pages:</p>
+            
+            <div class="github-tip">
+                <strong>Структура проекта:</strong><br>
+                your-repo/<br>
+                ├── index.html (этот файл)<br>
+                ├── model/<br>
+                │   └── your-model.glb (ваша модель)<br>
+                └── README.md
+            </div>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="file-input" class="file-input" accept=".glb,.gltf">
+                <label for="file-input" class="file-label">
+                    📤 Загрузить свою модель (.glb/.gltf)
+                </label>
+            </div>
+            <p id="file-status" style="margin-top: 10px; color: #666;">
+                Максимальный размер: 50 МБ
             </p>
+        </div>
+    </div>
+    
+    <!-- Секция для тестирования -->
+    <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; max-width: 1000px; width: 100%;">
+        <h3>🔧 Быстрая проверка</h3>
+        <p>Если ваша модель не загружается, используйте тестовую:</p>
+        <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+            <button id="test-duck" class="control-btn" style="background: #4CAF50; color: white; width: auto; padding: 0 20px;">
+                🦆 Тест: Утка
+            </button>
+            <button id="test-sphere" class="control-btn" style="background: #2196F3; color: white; width: auto; padding: 0 20px;">
+                🔵 Тест: Сфера
+            </button>
+            <button id="test-cube" class="control-btn" style="background: #FF9800; color: white; width: auto; padding: 0 20px;">
+                🧊 Тест: Куб
+            </button>
         </div>
     </div>
 
     <script>
-        // Готовые ссылки на тестовые модели
-        const TEST_MODELS = {
-            'duck': 'https://cdn.glitch.global/3b0b6a5a-5c5e-4b5e-8b0a-0e9d9b9b9b9b/Duck.glb',
-            'fox': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb'
+        // ==================== КОНФИГУРАЦИЯ ====================
+        const CONFIG = {
+            // Тестовые модели
+            TEST_MODELS: {
+                'duck': 'https://cdn.glitch.me/3b0b6a5a-5c5e-4b5e-8b0a-0e9d9b9b9b9b/Duck.glb',
+                'sphere': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Sphere/glTF/Sphere.gltf',
+                'cube': 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF/Box.gltf'
+            },
+            
+            // Автоматически попробовать эти пути для модели
+            MODEL_PATHS: [
+                'model.glb',
+                'model/model.glb',
+                'assets/model.glb',
+                '3d/model.glb',
+                'models/model.glb'
+            ]
         };
 
-        // Элементы DOM
-        const modelViewer = document.querySelector('#my-model-viewer');
+        // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
+        const modelViewer = document.querySelector('#model-viewer');
         const loadingElement = document.getElementById('loading');
         const progressText = document.getElementById('progress-text');
+        const fileInput = document.getElementById('file-input');
+        const fileStatus = document.getElementById('file-status');
+        
+        // Элементы управления
+        const rotateBtn = document.getElementById('rotate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const arBtn = document.getElementById('ar-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const touchHints = document.getElementById('touch-hints');
 
-        // Функция для загрузки тестовой модели
-        function loadTestModel(modelName) {
-            showLoading(`Загружаем тестовую модель: ${modelName}`);
+        // ==================== ФУНКЦИИ УПРАВЛЕНИЯ ====================
+        
+        // Включение/выключение автоповорота
+        rotateBtn.addEventListener('click', () => {
+            const isRotating = modelViewer.getAttribute('auto-rotate') === '';
+            modelViewer.setAttribute('auto-rotate', !isRotating);
+            rotateBtn.classList.toggle('active', !isRotating);
+            rotateBtn.title = !isRotating ? 'Вращение включено' : 'Включить вращение';
+        });
+
+        // Сброс вида к первоначальному
+        resetBtn.addEventListener('click', () => {
+            modelViewer.cameraOrbit = '0deg 75deg 105%';
+            modelViewer.fieldOfView = '45deg';
+            modelViewer.jumpCameraToGoal();
+            showNotification('Вид сброшен');
+        });
+
+        // Приближение
+        zoomInBtn.addEventListener('click', () => {
+            const currentFov = parseFloat(modelViewer.fieldOfView);
+            if (currentFov > 10) {
+                modelViewer.fieldOfView = `${currentFov - 5}deg`;
+            }
+        });
+
+        // Отдаление
+        zoomOutBtn.addEventListener('click', () => {
+            const currentFov = parseFloat(modelViewer.fieldOfView);
+            if (currentFov < 90) {
+                modelViewer.fieldOfView = `${currentFov + 5}deg`;
+            }
+        });
+
+        // AR режим
+        arBtn.addEventListener('click', () => {
+            if (modelViewer.activateAR) {
+                modelViewer.activateAR();
+            } else {
+                showNotification('AR не поддерживается на этом устройстве', 'warning');
+            }
+        });
+
+        // Полноэкранный режим
+        fullscreenBtn.addEventListener('click', () => {
+            const modelWrapper = document.querySelector('.model-wrapper');
+            if (!document.fullscreenElement) {
+                if (modelWrapper.requestFullscreen) {
+                    modelWrapper.requestFullscreen();
+                } else if (modelWrapper.webkitRequestFullscreen) {
+                    modelWrapper.webkitRequestFullscreen();
+                } else if (modelWrapper.msRequestFullscreen) {
+                    modelWrapper.msRequestFullscreen();
+                }
+                showNotification('Полноэкранный режим включен');
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        });
+
+        // ==================== ЗАГРУЗКА МОДЕЛЕЙ ====================
+        
+        // Загрузка тестовой модели
+        document.getElementById('test-duck').addEventListener('click', () => loadModel(CONFIG.TEST_MODELS.duck, 'Утка'));
+        document.getElementById('test-sphere').addEventListener('click', () => loadModel(CONFIG.TEST_MODELS.sphere, 'Сфера'));
+        document.getElementById('test-cube').addEventListener('click', () => loadModel(CONFIG.TEST_MODELS.cube, 'Куб'));
+
+        // Основная функция загрузки модели
+        function loadModel(src, name = 'Модель') {
+            showLoading(`Загружаем ${name}...`);
             
-            // Устанавливаем src и показываем модель
-            modelViewer.src = TEST_MODELS[modelName];
-            modelViewer.style.display = 'block';
+            // Устанавливаем новый источник
+            modelViewer.src = src;
             
-            console.log(`Загружаем модель: ${TEST_MODELS[modelName]}`);
+            // Показываем подсказки для телефонов
+            if (isTouchDevice()) {
+                touchHints.style.display = 'flex';
+                setTimeout(() => {
+                    touchHints.style.display = 'none';
+                }, 5000);
+            }
         }
 
-        // Функция для показа загрузки
-        function showLoading(message) {
-            loadingElement.style.display = 'flex';
-            progressText.textContent = message;
-        }
-
-        // Функция для скрытия загрузки
-        function hideLoading() {
-            loadingElement.style.display = 'none';
-        }
-
-        // События model-viewer
+        // ==================== ОБРАБОТКА СОБЫТИЙ ====================
+        
+        // Событие успешной загрузки модели
         modelViewer.addEventListener('load', () => {
             console.log('✅ Модель успешно загружена!');
             hideLoading();
             
-            // Показываем сообщение об успехе
-            setTimeout(() => {
-                alert('Модель успешно загружена! Теперь вы можете взаимодействовать с ней.');
-            }, 500);
-        });
-
-        modelViewer.addEventListener('error', (event) => {
-            console.error('❌ Ошибка загрузки модели:', event.detail);
+            // Включаем управление камерой
+            modelViewer.setAttribute('camera-controls', '');
             
-            // Показываем подробную ошибку
-            loadingElement.innerHTML = `
-                <div style="color: #e74c3c; font-size: 3rem;">❌</div>
-                <h3>Ошибка загрузки модели</h3>
-                <p>${getErrorMessage(event.detail)}</p>
-                <p style="margin-top: 20px;">
-                    <button class="btn" onclick="loadTestModel('duck')" style="margin: 5px;">
-                        Попробовать тестовую модель
-                    </button>
-                </p>
-            `;
+            // Показываем уведомление
+            showNotification('Модель загружена! Используйте мышь/пальцы для управления');
         });
 
+        // Событие ошибки загрузки
+        modelViewer.addEventListener('error', (event) => {
+            console.error('❌ Ошибка загрузки:', event.detail);
+            
+            // Пробуем другие пути
+            tryAlternativePaths();
+        });
+
+        // Прогресс загрузки
         modelViewer.addEventListener('progress', (event) => {
             const progress = Math.floor(event.detail.totalProgress * 100);
-            progressText.textContent = `Загрузка: ${progress}%`;
-            
-            if (progress === 100) {
-                progressText.textContent = 'Загрузка завершена, обработка модели...';
-            }
+            progressText.textContent = `Загрузка модели: ${progress}%`;
         });
 
-        // Функция для получения понятного сообщения об ошибке
-        function getErrorMessage(errorCode) {
-            const errors = {
-                'fetch-failed': 'Не удалось загрузить файл. Проверьте путь к файлу.',
-                'unsupported-format': 'Формат файла не поддерживается. Используйте .glb или .gltf.',
-                'parse-failed': 'Ошибка при чтении файла модели.',
-                'timeout': 'Время загрузки истекло. Файл слишком большой.',
-                'unknown': 'Неизвестная ошибка при загрузке модели.'
-            };
-            return errors[errorCode] || 'Произошла неизвестная ошибка';
-        }
-
-        // Управление моделью
-        function toggleAutoRotate() {
-            const isRotating = modelViewer.getAttribute('auto-rotate') === '';
-            modelViewer.setAttribute('auto-rotate', !isRotating);
+        // ==================== АЛЬТЕРНАТИВНЫЕ ПУТИ ДЛЯ GITHUB PAGES ====================
+        
+        function tryAlternativePaths() {
+            let currentIndex = 0;
             
-            document.getElementById('rotate-icon').textContent = isRotating ? '⏸️' : '🔄';
-            document.getElementById('rotate-text').textContent = isRotating ? 'Старт' : 'Стоп';
-        }
-
-        function resetView() {
-            modelViewer.cameraOrbit = '0deg 75deg 105%';
-            modelViewer.fieldOfView = '30deg';
-            modelViewer.jumpCameraToGoal();
-        }
-
-        function toggleShadow() {
-            const currentShadow = modelViewer.getAttribute('shadow-intensity');
-            const newShadow = currentShadow === '1' ? '0' : '1';
-            modelViewer.setAttribute('shadow-intensity', newShadow);
-            
-            document.getElementById('shadow-icon').textContent = newShadow === '1' ? '🌓' : '☀️';
-            document.getElementById('shadow-text').textContent = newShadow === '1' ? 'Тени' : 'Нет теней';
-        }
-
-        function changeEnvironment(env) {
-            modelViewer.setAttribute('environment-image', env);
-            const envNames = {
-                'neutral': '🏙️ Нейтральное',
-                'legacy': '🏛️ Классика',
-                'spruit-sunrise': '🌅 Рассвет'
-            };
-            
-            // Обновляем текст на всех кнопках окружения
-            document.querySelectorAll('.btn').forEach(btn => {
-                if (btn.textContent.includes('🏙️') || btn.textContent.includes('🏛️') || btn.textContent.includes('🌅')) {
-                    const envKey = Object.keys(envNames).find(key => envNames[key] === btn.textContent);
-                    if (envKey) {
-                        btn.textContent = envNames[envKey];
-                    }
+            function tryNextPath() {
+                if (currentIndex >= CONFIG.MODEL_PATHS.length) {
+                    // Все пути перепробованы
+                    showError('Не удалось найти модель. Загрузите файл вручную или используйте тестовую модель.');
+                    return;
                 }
-            });
-        }
-
-        function enterAR() {
-            if (modelViewer.activateAR) {
-                modelViewer.activateAR();
-            } else {
-                alert('AR не поддерживается на этом устройстве');
+                
+                const path = CONFIG.MODEL_PATHS[currentIndex];
+                progressText.textContent = `Пробуем путь: ${path}`;
+                
+                // Пробуем загрузить
+                fetch(path)
+                    .then(response => {
+                        if (response.ok) {
+                            loadModel(path);
+                        } else {
+                            currentIndex++;
+                            setTimeout(tryNextPath, 1000);
+                        }
+                    })
+                    .catch(() => {
+                        currentIndex++;
+                        setTimeout(tryNextPath, 1000);
+                    });
             }
+            
+            tryNextPath();
         }
 
-        // Загрузка файла с компьютера
-        document.getElementById('model-upload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
+        // ==================== ЗАГРУЗКА ФАЙЛОВ С КОМПЬЮТЕРА ====================
+        
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
             if (!file) return;
             
-            if (!file.name.endsWith('.glb') && !file.name.endsWith('.gltf')) {
-                alert('Пожалуйста, выберите файл .glb или .gltf');
-                return;
-            }
-            
+            // Проверка размера
             if (file.size > 50 * 1024 * 1024) {
-                alert('Файл слишком большой! Максимальный размер: 50 МБ');
+                showError('Файл слишком большой! Максимум 50 МБ');
                 return;
             }
             
-            showLoading(`Загружаем вашу модель: ${file.name}`);
+            // Проверка формата
+            if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
+                showError('Поддерживаются только файлы .glb и .gltf');
+                return;
+            }
+            
+            fileStatus.textContent = `Загружаем: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} МБ)`;
+            showLoading(`Загружаем ${file.name}...`);
             
             // Создаем URL для файла
             const objectURL = URL.createObjectURL(file);
-            modelViewer.src = objectURL;
-            modelViewer.style.display = 'block';
-            
-            console.log(`Загружаем локальный файл: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} МБ)`);
+            loadModel(objectURL, file.name);
         });
 
-        // Скачивание тестовой модели
-        function downloadModel() {
-            const link = document.createElement('a');
-            link.href = TEST_MODELS.duck;
-            link.download = 'test-model.glb';
-            link.click();
+        // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+        
+        function showLoading(message) {
+            loadingElement.style.display = 'flex';
+            progressText.textContent = message;
+        }
+        
+        function hideLoading() {
+            loadingElement.style.display = 'none';
+        }
+        
+        function showError(message) {
+            hideLoading();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                <h3>Ошибка загрузки</h3>
+                <p>${message}</p>
+                <div style="margin-top: 20px;">
+                    <button onclick="this.parentElement.parentElement.remove(); location.reload();" 
+                            style="background: white; color: #ff3b30; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                        Попробовать снова
+                    </button>
+                </div>
+            `;
+            
+            document.querySelector('.model-wrapper').appendChild(errorDiv);
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'warning' ? '#ff9800' : '#4CAF50'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        function isTouchDevice() {
+            return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         }
 
-        // Автоматически загружаем тестовую модель при старте
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        
+        // Добавляем стили для анимации
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Определяем устройство
+        if (isTouchDevice()) {
+            document.body.classList.add('touch-device');
+        }
+
+        // Начальная загрузка
         window.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Запускаем просмотрщик 3D моделей');
+            console.log('🚀 Инициализация 3D просмотрщика...');
             
-            // Даем 3 секунды на инициализацию, затем загружаем тестовую модель
+            // Пробуем найти модель по стандартным путям
             setTimeout(() => {
                 if (!modelViewer.src) {
-                    loadTestModel('duck');
+                    tryAlternativePaths();
                 }
-            }, 3000);
+            }, 2000);
         });
 
-        // Проверка поддержки WebGL
-        function checkWebGLSupport() {
-            try {
-                const canvas = document.createElement('canvas');
-                return !!(window.WebGLRenderingContext && 
-                         (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-            } catch (e) {
-                return false;
+        // Обработка жестов для мобильных устройств
+        let touchStartDistance = 0;
+        
+        document.querySelector('.model-wrapper').addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                touchStartDistance = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
             }
-        }
-
-        if (!checkWebGLSupport()) {
-            loadingElement.innerHTML = `
-                <div style="color: #e74c3c; font-size: 3rem;">⚠️</div>
-                <h3>WebGL не поддерживается</h3>
-                <p>Ваш браузер или устройство не поддерживает WebGL, необходимый для отображения 3D.</p>
-                <p>Попробуйте:</p>
-                <ul style="text-align: left; display: inline-block;">
-                    <li>Обновить браузер</li>
-                    <li>Использовать Chrome, Firefox или Edge</li>
-                    <li>Проверить настройки графики</li>
-                </ul>
-            `;
-        }
+        });
+        
+        document.querySelector('.model-wrapper').addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && e.changedTouches.length === 2) {
+                const currentDistance = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                
+                // Масштабирование
+                if (touchStartDistance > 0) {
+                    const scaleChange = currentDistance / touchStartDistance;
+                    if (scaleChange > 1.1 || scaleChange < 0.9) {
+                        const currentFov = parseFloat(modelViewer.fieldOfView);
+                        const newFov = currentFov / scaleChange;
+                        
+                        if (newFov > 10 && newFov < 90) {
+                            modelViewer.fieldOfView = `${newFov}deg`;
+                        }
+                        
+                        touchStartDistance = currentDistance;
+                    }
+                }
+            }
+        });
     </script>
 
-    <div style="margin-top: 30px; color: white; text-align: center; padding: 20px;">
-        <p>🎯 Просто скопируйте этот код в файл index.html и откройте в браузере</p>
-        <p style="font-size: 0.9rem; opacity: 0.8;">Код полностью самодостаточен и содержит тестовые модели</p>
+    <div style="color: white; text-align: center; margin-top: 30px; padding: 20px; max-width: 800px;">
+        <p><strong>Для GitHub Pages:</strong></p>
+        <p style="font-size: 0.9rem; opacity: 0.8;">
+            1. Загрузите этот файл как <code>index.html</code><br>
+            2. Создайте папку <code>model</code> и поместите туда вашу модель как <code>model.glb</code><br>
+            3. Включите GitHub Pages в настройках репозитория
+        </p>
     </div>
 </body>
 </html>
