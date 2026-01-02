@@ -174,7 +174,7 @@
         <div class="model-container">
             <div class="loading-overlay" id="loadingOverlay">
                 <div class="loader"></div>
-                <div id="loadingText">Загрузка модели...</div>
+                <div id="loadingText">Подготовка к загрузке...</div>
                 <div class="loading-progress">
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
@@ -183,7 +183,7 @@
             
             <model-viewer
                 id="model-viewer"
-                src="https://www.dropbox.com/scl/fi/0193mjqzcky4o021hwkl7/model.glb?rlkey=ipuyv1u83u7fwlvaspf2793qt&st=uwhyeol1&raw=1"
+                src=""
                 alt="3D Модель"
                 camera-controls
                 shadow-intensity="0"
@@ -203,6 +203,33 @@
     </div>
 
     <script>
+        // Базовая ссылка на Dropbox
+        const BASE_DROPBOX_LINK = 'https://www.dropbox.com/scl/fi/0193mjqzcky4o021hwkl7/model.glb?rlkey=ipuyv1u83u7fwlvaspf2793qt&st=uwhyeol1';
+        
+        // Различные варианты ссылок для перебора
+        const URL_VARIANTS = [
+            // Вариант 1: raw=1 (самый простой)
+            BASE_DROPBOX_LINK + '&raw=1',
+            
+            // Вариант 2: dl=1 (скачивание)
+            BASE_DROPBOX_LINK + '&dl=1',
+            
+            // Вариант 3: Используем dl.dropboxusercontent.com с raw=1
+            BASE_DROPBOX_LINK.replace('www.dropbox.com', 'dl.dropboxusercontent.com') + '&raw=1',
+            
+            // Вариант 4: Используем dl.dropboxusercontent.com с dl=1
+            BASE_DROPBOX_LINK.replace('www.dropbox.com', 'dl.dropboxusercontent.com') + '&dl=1',
+            
+            // Вариант 5: dl.dropboxusercontent.com без параметров
+            'https://dl.dropboxusercontent.com/scl/fi/0193mjqzcky4o021hwkl7/model.glb?rlkey=ipuyv1u83u7fwlvaspf2793qt',
+            
+            // Вариант 6: Пробуем без st параметра
+            'https://www.dropbox.com/scl/fi/0193mjqzcky4o021hwkl7/model.glb?rlkey=ipuyv1u83u7fwlvaspf2793qt&raw=1',
+            
+            // Вариант 7: Пробуем только с rlkey
+            'https://www.dropbox.com/scl/fi/0193mjqzcky4o021hwkl7/model.glb?rlkey=ipuyv1u83u7fwlvaspf2793qt',
+        ];
+        
         // Элементы DOM
         const modelViewer = document.getElementById('model-viewer');
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -210,6 +237,9 @@
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
+        
+        let currentUrlIndex = 0;
+        let isModelLoaded = false;
         
         // Обновление прогресса
         function updateProgress(percent, message) {
@@ -225,9 +255,100 @@
             }, 500);
         }
         
+        // Показать ошибку
+        function showError(message) {
+            loadingOverlay.innerHTML = `
+                <div style="text-align: center; padding: 30px; max-width: 500px;">
+                    <div style="color: #ff4444; font-size: 2.5rem; margin-bottom: 15px;">⚠️</div>
+                    <h3 style="color: #333; margin-bottom: 15px;">${message}</h3>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Dropbox блокирует загрузку 3D моделей из-за CORS политики.
+                    </p>
+                    
+                    <div style="background: #e8f4ff; padding: 20px; border-radius: 10px; margin-bottom: 25px; text-align: left;">
+                        <h4 style="color: #0062ff; margin-bottom: 10px;">Быстрое решение:</h4>
+                        <p style="color: #666; margin-bottom: 10px;">
+                            Используйте <strong>GitHub</strong> для хостинга:
+                        </p>
+                        <ol style="padding-left: 20px; color: #666;">
+                            <li>Создайте репозиторий на GitHub</li>
+                            <li>Загрузите model.glb (28 МБ)</li>
+                            <li>Нажмите на файл → Raw</li>
+                            <li>Скопируйте ссылку</li>
+                            <li>Замените ссылку в коде (строка 162)</li>
+                        </ol>
+                    </div>
+                    
+                    <button onclick="tryNextUrl()" style="
+                        background: #0062ff;
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        font-size: 0.95rem;
+                        cursor: pointer;
+                        margin-right: 10px;
+                    ">
+                        Попробовать другую ссылку (${currentUrlIndex + 1}/${URL_VARIANTS.length})
+                    </button>
+                    
+                    <button onclick="window.open('https://github.com/new', '_blank')" style="
+                        background: #24292e;
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        font-size: 0.95rem;
+                        cursor: pointer;
+                    ">
+                        📁 Создать репозиторий
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Попробовать следующую ссылку
+        function tryNextUrl() {
+            if (currentUrlIndex >= URL_VARIANTS.length) {
+                showError('Все варианты ссылок не сработали');
+                return;
+            }
+            
+            const url = URL_VARIANTS[currentUrlIndex];
+            currentUrlIndex++;
+            
+            console.log(`Пробуем ссылку ${currentUrlIndex}/${URL_VARIANTS.length}:`, url);
+            
+            loadingText.textContent = `Попытка ${currentUrlIndex}/${URL_VARIANTS.length}...`;
+            updateProgress(0, 'Подготовка...');
+            
+            // Сбрасываем модель и пробуем новую ссылку
+            modelViewer.src = url;
+            
+            // Устанавливаем таймаут для этой попытки
+            setTimeout(() => {
+                if (!isModelLoaded && currentUrlIndex < URL_VARIANTS.length) {
+                    console.log(`Таймаут для ссылки ${currentUrlIndex}, пробуем следующую...`);
+                    tryNextUrl();
+                }
+            }, 8000); // 8 секунд на попытку
+        }
+        
+        // Загрузка тестовой модели для проверки
+        function loadTestModel() {
+            loadingText.textContent = 'Загрузка тестовой модели...';
+            updateProgress(0, 'Тестовая загрузка...');
+            
+            // Маленькая тестовая модель для проверки
+            const testUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb';
+            
+            modelViewer.src = testUrl;
+        }
+        
         // Обработчики событий модели
         modelViewer.addEventListener('load', () => {
             console.log('✅ Модель успешно загружена');
+            isModelLoaded = true;
             updateProgress(100, 'Загрузка завершена!');
             
             setTimeout(() => {
@@ -253,26 +374,16 @@
         modelViewer.addEventListener('error', (event) => {
             console.error('❌ Ошибка загрузки модели:', event.detail);
             
-            loadingOverlay.innerHTML = `
-                <div style="text-align: center; padding: 30px; max-width: 500px;">
-                    <div style="color: #ff4444; font-size: 2.5rem; margin-bottom: 15px;">⚠️</div>
-                    <h3 style="color: #333; margin-bottom: 15px;">Ошибка загрузки модели</h3>
-                    <p style="color: #666; margin-bottom: 20px;">
-                        Не удалось загрузить 3D модель. Попробуйте обновить страницу.
-                    </p>
-                    <button onclick="location.reload()" style="
-                        background: #0062ff;
-                        color: white;
-                        border: none;
-                        padding: 12px 25px;
-                        border-radius: 8px;
-                        font-size: 0.95rem;
-                        cursor: pointer;
-                    ">
-                        Обновить страницу
-                    </button>
-                </div>
-            `;
+            // Ждем 2 секунды перед следующей попыткой
+            setTimeout(() => {
+                if (!isModelLoaded) {
+                    if (currentUrlIndex < URL_VARIANTS.length) {
+                        tryNextUrl();
+                    } else {
+                        showError('Не удалось загрузить 3D модель');
+                    }
+                }
+            }, 2000);
         });
         
         // Полноэкранный режим
@@ -323,6 +434,11 @@
                 modelViewer.cameraOrbit = '0deg 75deg 2.5m';
                 modelViewer.jumpCameraToGoal();
             }
+            
+            // T - тестовая модель
+            if (e.key === 't' || e.key === 'T') {
+                loadTestModel();
+            }
         });
         
         // Настройка адаптивности
@@ -341,6 +457,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             adaptLayout();
             window.addEventListener('resize', adaptLayout);
+            
+            // Начинаем с первой ссылки
+            setTimeout(() => {
+                tryNextUrl();
+            }, 1000);
         });
     </script>
 </body>
